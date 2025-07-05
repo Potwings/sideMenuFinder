@@ -1,0 +1,19 @@
+{
+  "name": "side-menu-finder",
+  "version": "1.0.0",
+  "description": "음식점 메뉴 검색 서비스",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "vite": "^4.4.5"
+  }
+} 
