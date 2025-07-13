@@ -97,7 +97,9 @@
           <div
             v-for="store in searchResults"
             :key="store.storeName"
-            class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+            @click="openStoreURL(store.storeURL)"
+            class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+            :class="{ 'hover:shadow-xl': store.storeURL }"
           >
             <!-- Store Image/Icon -->
             <div class="h-48 bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
@@ -106,7 +108,9 @@
             
             <!-- Store Info -->
             <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 mb-3">{{ store.storeName }}</h3>
+              <h3 class="text-xl font-semibold text-gray-900 mb-3">
+                {{ store.storeName }}
+              </h3>
               
               <!-- Menu List -->
               <div class="space-y-2">
@@ -248,7 +252,7 @@ export default {
         console.log('백엔드 응답:', response.data)
         
         // 백엔드에서 StoreInfo 객체들의 배열을 반환한다고 가정
-        // StoreInfo: { storeName: String, menuList: List<String> }
+        // StoreInfo: { storeName: String, menuList: List<String>, storeURL: String }
         this.searchResults = response.data || []
       } catch (error) {
         console.error('검색 오류:', error)
@@ -256,6 +260,12 @@ export default {
         this.searchResults = []
       } finally {
         this.loading = false
+      }
+    },
+    
+    openStoreURL(storeURL) {
+      if (storeURL) {
+        window.open(storeURL, '_blank')
       }
     }
   }
