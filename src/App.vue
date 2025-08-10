@@ -102,8 +102,22 @@
             :class="{ 'hover:shadow-xl': store.storeURL }"
           >
             <!-- Store Image/Icon -->
-            <div class="h-48 bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
-              <span class="text-white font-bold text-xl">{{ store.storeName.charAt(0) }}</span>
+            <div class="h-48 relative overflow-hidden">
+              <!-- 실제 이미지가 있는 경우 -->
+              <img 
+                v-if="store.imageUrl" 
+                :src="store.imageUrl" 
+                :alt="store.storeName + ' 이미지'"
+                class="w-full h-full object-cover absolute inset-0"
+                @error="handleImageError"
+              />
+              <!-- 이미지가 없거나 로딩 실패 시 기본 아이콘 -->
+              <div 
+                class="w-full h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center"
+                :class="{ 'hidden': store.imageUrl }"
+              >
+                <span class="text-white font-bold text-xl">{{ store.storeName.charAt(0) }}</span>
+              </div>
             </div>
             
             <!-- Store Info -->
@@ -253,7 +267,14 @@ export default {
         
         // 백엔드에서 StoreInfo 객체들의 배열을 반환한다고 가정
         // StoreInfo: { storeName: String, menuList: List<String>, storeURL: String }
-        this.searchResults = response.data || []
+        const results = response.data || []
+        
+        // storeURL의 마지막 세그먼트를 storeId로 사용해 이미지 URL 구성
+        this.searchResults = results.map(store => {
+          const storeId = this.extractStoreIdFromStoreURL(store.storeURL)
+          const imageUrl = storeId ? `http://localhost:8080/images/${storeId}` : null
+          return { ...store, imageUrl }
+        })
       } catch (error) {
         console.error('검색 오류:', error)
         this.error = '검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
@@ -267,6 +288,51 @@ export default {
       if (storeURL) {
         window.open(storeURL, '_blank')
       }
+    },
+    
+    extractStoreIdFromStoreURL(storeURL) {
+      if (!storeURL || typeof storeURL !== 'string') return null
+      try {
+        const segments = storeURL.split('/').filter(Boolean)
+        return segments.length ? segments[segments.length - 1] : null
+      } catch (e) {
+        return null
+      }
+    },
+    
+    convertByteArrayToImageUrl(byteArray) {
+      try {
+        // byte array를 Uint8Array로 변환
+        const uint8Array = new Uint8Array(byteArray)
+        
+        // Uint8Array를 base64 문자열로 변환
+        let binary = ''
+        const len = uint8Array.byteLength
+        for (let i = 0; i < len; i++) {
+          binary += String.fromCharCode(uint8Array[i])
+        }
+        const base64String = btoa(binary)
+        
+        // data URL 형식으로 반환 (JPEG로 가정, 필요시 MIME 타입 조정 가능)
+        return `data:image/jpeg;base64,${base64String}`
+      } catch (error) {
+        console.error('이미지 변환 오류:', error)
+        return null
+      }
+    },
+    
+    handleImageError(event) {
+      // 이미지 로딩 실패 시 해당 store의 imageUrl을 null로 설정
+      console.log('이미지 로딩 실패:', event.target.src)
+      
+      // 실패한 이미지를 찾아서 imageUrl을 제거
+      const failedSrc = event.target.src
+      this.searchResults = this.searchResults.map(store => {
+        if (store.imageUrl === failedSrc) {
+          return { ...store, imageUrl: null }
+        }
+        return store
+      })
     }
   }
 }
